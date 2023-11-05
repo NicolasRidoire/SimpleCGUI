@@ -41,7 +41,7 @@ void CPU::write(uint16_t addr, uint8_t data) {
 }
 
 void CPU::clock() {
-	if (clock == 0) {
+	if (cycles == 0) {
 		opcode = read(PC);
 		PC++;
 
@@ -54,6 +54,65 @@ void CPU::clock() {
 	}
 
 	cycles--;
+}
+
+void CPU::reset() {
+	A = X = Y = 0;
+	S = 0xFD;
+	status = 0x00 | U;
+	addr_abs = 0xFFFC;
+	uint16_t lo = read(addr_abs + 0);
+	uint16_t hi = read(addr_abs + 1);
+
+	PC = (hi << 8) | lo;
+
+	addr_rel = 0x0000;
+	addr_abs = 0x0000;
+	fetched = 0x00;
+
+	cycles = 8;
+}
+
+void CPU::irq() {
+	if (GetFlag(I) == 0) {
+		write(0x0100 + S, (PC >> 8) & 0x00FF);
+		S++;
+		write(0x0100 + S, PC & 0x00FF);
+		S++;
+
+		SetFlag(B, 0);
+		SetFlag(U, 1);
+		SetFlag(I, 1);
+		write(0x0100 + S, status);
+		S++;
+
+		addr_abs = 0xFFFE;
+		uint16_t lo = read(addr_abs + 0);
+		uint16_t hi = read(addr_abs + 1);
+		PC = (hi << 8) | lo;
+
+		cycles = 7;
+	}
+}
+
+void CPU::nmi() {
+	write(0x0100 + S, (PC >> 8) & 0x00FF);
+	S++;
+	write(0x0100 + S, PC & 0x00FF);
+	S++;
+
+	SetFlag(B, 0);
+	SetFlag(U, 1);
+	SetFlag(I, 1);
+	write(0x0100 + S, status);
+	S++;
+
+	addr_abs = 0xFFFA;
+	uint16_t lo = read(addr_abs + 0);
+	uint16_t hi = read(addr_abs + 1);
+	PC = (hi << 8) | lo;
+
+	cycles = 8;
 }
 
 // Addressing modes
@@ -173,6 +232,11 @@ uint8_t CPU::fetch() {
 	if (!(lookup[opcode].addrmode == &CPU::IMP))
 		fetched = read(addr_abs);
 	return fetched;
+}
+
+uint8_t CPU::XXX() {
+	printf("Error : unknown opcode at address %d", PC);
+	return 0;
 }
 
 uint8_t CPU::AND() {

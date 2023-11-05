@@ -1,7 +1,6 @@
 #pragma once
 #include <stdio.h>
 #include <string>
-#include <cstdint>
 #include <vector>
 
 class Bus;
@@ -37,20 +36,22 @@ public:
 		N = (1 << 7)	// Negative
 	};
 
+private:
+
 	// Addressing modes
 	uint8_t IMP(), IMM(), ZP0(), ZPX(), ZPY(), REL(),
 		ABS(), ABX(), ABY(), IND(), IZX(), IZY();
 
 	// Opcodes
-	uint8_t ADC(), AND(), ASL(), BCC(), BCS(), BEQ(), 
-		BIT(), BMI(), BNE(), BPL(), BRK(), BVC(), BVS(), 
-		CLC(), CLD(), CLI(), CLV(), CMP(), CPX(), CPY(), 
-		DEC(), DEX(), DEY(), EOR(), INC(), INX(), INY(), 
-		JMP(), JSR(), LDA(), LDX(), LDY(), LSR(), NOP(), 
-		ORA(), PHA(), PHP(), PLA(), PLP(), ROL(), ROR(), 
-		RTI(), RTS(), SBC(), SEC(), SED(), SEI(), STA(), 
-		STX(), STY(), TAX(), TAY(), TXS(), TXA(), TYA(),
-		TSX();
+	uint8_t ADC(), AND(), ASL(), BCC(), BCS(), BEQ(),
+		BIT(), BMI(), BNE(), BPL(), BRK(), BVC(), BVS(),
+		CLC(), CLD(), CLI(), CLV(), CMP(), CPX(), CPY(),
+		DEC(), DEX(), DEY(), EOR(), INC(), INX(), INY(),
+		JMP(), JSR(), LDA(), LDX(), LDY(), LSR(), NOP(),
+		ORA(), PHA(), PHP(), PLA(), PLP(), ROL(), ROR(),
+		RTI(), RTS(), SBC(), SEC(), SED(), SEI(), STA(),
+		STX(), STY(), TAX(), TAY(), TSX(), TXA(), TXS(), 
+		TYA();
 
 	uint8_t XXX(); // Illegal opcodes
 
@@ -59,6 +60,12 @@ public:
 	void irq(); // Interrupt request
 	void nmi(); // Non maskable interrupt request
 
+	uint8_t read(uint16_t addr);
+	void write(uint16_t addr, uint8_t data);
+
+	uint8_t GetFlag(FLAGS f);
+	void SetFlag(FLAGS f, bool v);
+
 	uint8_t fetch();
 	uint8_t fetched = 0x00l;
 
@@ -66,16 +73,6 @@ public:
 	uint16_t addr_rel = 0x00; // relative address
 	uint8_t opcode = 0x00;
 	uint8_t cycles = 0;
-
-	void Execute();
-
-private:
-
-	uint8_t read(uint16_t addr);
-	void write(uint16_t addr, uint8_t data);
-
-	uint8_t GetFlag(FLAGS f);
-	void SetFlag(FLAGS f, bool v);
 
 	struct INSTRUCTION
 	{

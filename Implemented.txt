@@ -35,3 +35,4 @@ Links :
 	- Video series about 6502 emu : https://www.youtube.com/watch?v=qJgsuQoy9bc&ab_channel=DavePoo
 	- Detailed explanations for CPU instructions : https://www.pagetable.com/c64ref/6502/?tab=2#PHA
 	- Video series about NES emulator : https://www.youtube.com/watch?v=F8kx56OZQhg&ab_channel=javidx9
+	- NES emulator project : https://github.com/OneLoneCoder/olcNES

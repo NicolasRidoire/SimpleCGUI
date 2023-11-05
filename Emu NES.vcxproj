@@ -134,6 +134,7 @@
   <ItemGroup>
     <ClInclude Include="Bus.h" />
     <ClInclude Include="CPU.h" />
+    <ClInclude Include="olcPixelGameEngine.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Implemented.txt" />
