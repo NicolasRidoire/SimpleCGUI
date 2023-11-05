@@ -1,5 +1,7 @@
 #pragma once
 #include <stdio.h>
+#include <math.h>
+#include <malloc.h>
 
 using Byte8 = unsigned char;
 using Byte16 = unsigned short;
@@ -49,17 +51,25 @@ STY_ZP = 0x84,
 STY_ZPX = 0x94,
 STY_AB = 0x8C;
 
-static constexpr Byte8 TAX_IMP = 0xAA;
-static constexpr Byte8 TAY_IMP = 0xA8;
-static constexpr Byte8 TXA_IMP = 0x8A;
-static constexpr Byte8 TYA_IMP = 0x98;
+static constexpr Byte8 TAX = 0xAA;
+static constexpr Byte8 TAY = 0xA8;
+static constexpr Byte8 TXA = 0x8A;
+static constexpr Byte8 TYA = 0x98;
 
+static constexpr Byte8 TSX = 0xBA;
+static constexpr Byte8 TXS = 0x9A;
+
+static constexpr Byte8 PHA = 0x48;
+static constexpr Byte8 PHP = 0x08;
+
+static constexpr Byte8 PLA = 0x68;
+static constexpr Byte8 PLP = 0x28;
 
 class Memory
 {
 public :
 	static constexpr unsigned int MAX_MEM = 0xFFFF;
-	Byte8 data[MAX_MEM];
+	Byte8* data;
 
 	Memory();
 	~Memory();
@@ -77,6 +87,7 @@ public:
 	Byte8 zeroFlag : 1;
 	Byte8 interruptDisable : 1;
 	Byte8 decimalMode : 1;
+	Byte8 breakCommand : 1;
 	Byte8 overflowFlag : 1;
 	Byte8 negativeFlag : 1;
 	Byte8 bFlag : 1;
@@ -87,11 +98,13 @@ public:
 	Byte8 FetchByte(Memory& memory);
 	Byte16 FetchByte16(Memory& memory);
 	Byte8 ReadByte(Memory& memory, Byte16 address);
+	Byte8 ReadByteFromStack(Memory& memory);
 	void WriteByte(Memory& memory, Byte8 address, Byte8& regist);
+	void WriteByteToStack(Memory& memory, Byte8& address, Byte8& regist);
 
 	void Execute(Memory& memory);
-	void LDA_FLAGS();
-	void LDX_FLAGS();
+	void Accum_FLAGS();
+	void LDX_TSX_FLAGS();
 	void LDY_FLAGS();
 	void TAX_FLAGS();
 	void TAY_FLAGS();

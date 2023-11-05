@@ -10,6 +10,12 @@ CPU :
 		- TAY
 		- TXA
 		- TYA
+		- TSX
+		- TXS
+		- PHA
+		- PHP
+		- PLA
+		- PLP
 
 	- ProgramCounter start address ?
 
@@ -21,3 +27,10 @@ Memory :
 	- NES APU and I/O registers (0x4000 - 0x4017)
 	- APU and I/O functionality normally disabled (0x4018 - 0x401F)
 	- Cartridge space : PRG ROM / RAM and mappers registers (0x4020 - 0xFFFF)
+
+Links :
+	- CPU and memory Info for NES : https://www.nesdev.org/wiki/CPU_ALL
+	- Info about the 6502 : http://www.6502.org/users/obelisk/
+	- Wikipedia NES : https://fr.wikipedia.org/wiki/Nintendo_Entertainment_System
+	- Video series about 6502 emu : https://www.youtube.com/watch?v=qJgsuQoy9bc&ab_channel=DavePoo
+	- Detailed explanations for CPU instructions : https://www.pagetable.com/c64ref/6502/?tab=2#PHA
