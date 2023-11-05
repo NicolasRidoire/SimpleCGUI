@@ -80,7 +80,7 @@ private:
 	struct INSTRUCTION
 	{
 		std::string name;
-		uint8_t(CPU::* opcode)(void) = nullptr;
+		uint8_t(CPU::* operate)(void) = nullptr;
 		uint8_t(CPU::* addrmode)(void) = nullptr;
 		uint8_t cycles = 0;
 	};

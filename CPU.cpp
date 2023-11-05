@@ -40,19 +40,145 @@ void CPU::write(uint16_t addr, uint8_t data) {
 	bus->write(addr, data);
 }
 
-void CPU::Execute() {
-	bool isThereInstr = true;
-	while (isThereInstr) {
-		uint8_t instr = read(PC);
-		switch (instr)
-		{
-		case 1:
-			break;
-		default:
-			// printf("Error : unknown instruction");
-			isThereInstr = false;
-			break;
-		}
+void CPU::clock() {
+	if (clock == 0) {
+		opcode = read(PC);
+		PC++;
+
+		cycles = lookup[opcode].cycles;
+
+		uint8_t additional_cycle1 = (this->*lookup[opcode].addrmode)(); // Use the pointer to the right address mode function
+		uint8_t additional_cycle2 = (this->*lookup[opcode].operate)(); // Use the pointer to the right instruction function
+
+		cycles += (additional_cycle1 & additional_cycle2);
 	}
+
+	cycles--;
 }
 
+// Addressing modes
+
+uint8_t CPU::IMP() {
+	fetched = A;
+	return 0;
+}
+
+uint8_t CPU::IMM() {
+	addr_abs = PC++;
+	return 0;
+}
+
+uint8_t CPU::ZP0() {
+	addr_abs = read(PC);
+	PC++;
+	addr_abs &= 0x00FF;
+	return 0;
+}
+
+uint8_t CPU::ZPX() {
+	addr_abs = (read(PC) + X);
+	PC++;
+	addr_abs &= 0x00FF;
+	return 0;
+}
+
+uint8_t CPU::ZPY() {
+	addr_abs = (read(PC) + Y);
+	PC++;
+	addr_abs &= 0x00FF;
+	return 0;
+}
+
+uint8_t CPU::REL() {
+	addr_rel = read(PC);
+	PC++;
+	if (addr_rel & 0x80)
+		addr_rel |= 0xFF00;
+	return 0;
+}
+
+uint8_t CPU::ABS() {
+	uint16_t lo = read(PC);
+	PC++;
+	uint16_t hi = read(PC);
+	PC++;
+	addr_abs = (hi << 8) | lo;
+	return 0;
+}
+
+uint8_t CPU::ABX() {
+	uint16_t lo = read(PC);
+	PC++;
+	uint16_t hi = read(PC);
+	PC++;
+	addr_abs = (hi << 8) | lo;
+	addr_abs += X;
+	if ((addr_abs & 0xFF00) != (hi << 8)) // If hi bits change, change page so need another clock cycle
+		return 1;
+	else
+		return 0;
+}
+
+uint8_t CPU::ABY() {
+	uint16_t lo = read(PC);
+	PC++;
+	uint16_t hi = read(PC);
+	PC++;
+	addr_abs = (hi << 8) | lo;
+	addr_abs += Y;
+	if ((addr_abs & 0xFF00) != (hi << 8)) // If hi bits change, change page so need another clock cycle
+		return 1;
+	else
+		return 0;
+}
+
+uint8_t CPU::IND() { // Pointer reading
+	uint16_t ptr_lo = read(PC);
+	PC++;
+	uint16_t ptr_hi = read(PC);
+	PC++;
+	uint16_t ptr = (ptr_hi << 8) | ptr_lo;
+	if (ptr_lo == 0x00FF) // Simulate page boundary hardware bug
+		addr_abs = (read(ptr & 0xFF00) << 8) | read(ptr + 0);
+	else
+		addr_abs = (read(ptr + 1) << 8) | read(ptr + 0); 
+	return 0;
+}
+
+uint8_t CPU::IZX() {
+	uint16_t t = read(PC);
+	PC++;
+	uint16_t lo = read((uint16_t)(t + (uint16_t)X) & 0x00FF);
+	uint16_t hi = read((uint16_t)(t + (uint16_t)X + 1) & 0x00FF);
+	addr_abs = (hi << 8) | lo;
+	return 0;
+}
+
+uint8_t CPU::IZY() {
+	uint16_t t = read(PC);
+	PC++;
+	uint16_t lo = read(t & 0x00FF);
+	uint16_t hi = read((t + 1) & 0x00FF);
+	addr_abs = (hi << 8) | lo;
+	addr_abs += Y;
+	if ((addr_abs & 0xFF00) != (hi << 8))
+		return 1;
+	else 
+		return 0;
+}
+
+// Instructions
+
+uint8_t CPU::fetch() {
+	if (!(lookup[opcode].addrmode == &CPU::IMP))
+		fetched = read(addr_abs);
+	return fetched;
+}
+
+uint8_t CPU::AND() {
+	fetch();
+	A = A & fetched;
+	SetFlag(Z, A == 0x00);
+	SetFlag(N, A & 0x80); // Check if 8th byte is set 
+	return 1;
+}
