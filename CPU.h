@@ -36,6 +36,9 @@ public:
 		N = (1 << 7)	// Negative
 	};
 
+	void clock();
+	void reset();
+
 private:
 
 	// Addressing modes
@@ -55,15 +58,11 @@ private:
 
 	uint8_t XXX(); // Illegal opcodes
 
-	void clock();
-	void reset();
 	void irq(); // Interrupt request
 	void nmi(); // Non maskable interrupt request
 
 	uint8_t read(uint16_t addr);
 	void write(uint16_t addr, uint8_t data);
-	
-	void updateStatus();
 
 	uint8_t GetFlag(FLAGS f);
 	void SetFlag(FLAGS f, bool v);

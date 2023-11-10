@@ -128,16 +128,27 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Bus.cpp" />
+    <ClCompile Include="Cartridge.cpp" />
     <ClCompile Include="CPU.cpp" />
+    <ClCompile Include="Mapper.cpp" />
+    <ClCompile Include="Mapper_0.cpp" />
+    <ClCompile Include="PPU.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bus.h" />
+    <ClInclude Include="Cartridge.h" />
     <ClInclude Include="CPU.h" />
+    <ClInclude Include="Mapper.h" />
+    <ClInclude Include="Mapper_0.h" />
     <ClInclude Include="olcPixelGameEngine.h" />
+    <ClInclude Include="PPU.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Implemented.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="D:\Downloads\Super Mario Bros. (World).nes" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

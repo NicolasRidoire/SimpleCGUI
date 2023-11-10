@@ -33,11 +33,11 @@ CPU::~CPU() {
 }
 
 uint8_t CPU::read(uint16_t addr) {
-	return bus->read(addr);
+	return bus->cpuRead(addr);
 }
 
 void CPU::write(uint16_t addr, uint8_t data) {
-	bus->write(addr, data);
+	bus->cpuWrite(addr, data);
 }
 
 uint8_t CPU::GetFlag(FLAGS f) {
@@ -642,7 +642,7 @@ uint8_t CPU::SBC() {
 	SetFlag(Z, ((temp & 0x00FF) == 0));
 	SetFlag(N, temp & 0x0080);
 	A = temp & 0x00FF;
-	return;
+	return 1;
 }
 
 uint8_t CPU::SEC() {
