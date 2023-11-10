@@ -15,12 +15,6 @@ private:
 	uint16_t scanline = 0;
 	uint16_t cycle = 0;
 
-	olc::Pixel palScreen[0x40];
-
-	olc::Sprite* sprScreen;
-	olc::Sprite* sprNameTable[2];
-	olc::Sprite* sprPatternTable[2];
-
 public:
 	PPU();
 	~PPU();
@@ -33,5 +27,15 @@ public:
 
 	void connectCartridge(const std::shared_ptr<Cartridge>& cartridge);
 	void clock();
+
+	olc::Pixel palScreen[0x40];
+
+	olc::Sprite* sprScreen;
+	olc::Sprite* sprNameTable[2];
+	olc::Sprite* sprPatternTable[2];
+	bool frame_complete = false;
+
+	olc::Sprite& GetScreen();
+
 };
 

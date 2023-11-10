@@ -11,17 +11,8 @@ public:
 private:
 	Bus nes;
 	std::shared_ptr<Cartridge> cart;
-	bool emulationRun = false;
 	std::map<uint16_t, std::string> mapAsm;
-
-	std::string hex(uint32_t n, uint8_t d)
-	{
-		std::string s(d, '0');
-		for (int i = d - 1; i >= 0; i--, n >>= 4)
-			s[i] = "0123456789ABCDEF"[n & 0xF];
-		return s;
-	};
-
+	float residualTime = 0.f;
 
 	bool OnUserCreate()
 	{
@@ -40,7 +31,21 @@ private:
 
 	bool OnUserUpdate(float fElapsedTime)
 	{
-		Clear(olc::BLACK);
+		Clear(olc::VERY_DARK_BLUE);
+		
+		if (residualTime > 0.f)
+			residualTime -= fElapsedTime;
+		else {
+			residualTime += (1.f / 60.f) - fElapsedTime;
+			do { nes.clock(); } while (!nes.ppu.frame_complete);
+			nes.ppu.frame_complete = false;
+		}
+
+		if (GetKey(olc::Key::ESCAPE).bReleased) {
+			exit(0);
+		}
+
+		DrawSprite(0, 0, &nes.ppu.GetScreen(), 2);
 
 		return true;
 	}

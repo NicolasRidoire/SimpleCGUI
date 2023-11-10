@@ -81,6 +81,11 @@ PPU::~PPU() {
 
 }
 
+olc::Sprite& PPU::GetScreen()
+{
+	return *sprScreen;
+}
+
 uint8_t PPU::cpuRead(uint16_t addr, bool rdonly) {
 	uint8_t data = 0x00;
 	switch (addr) {
@@ -146,12 +151,16 @@ void PPU::connectCartridge(const std::shared_ptr<Cartridge>& cartridge) {
 }
 
 void PPU::clock() {
+
+	sprScreen->SetPixel(cycle - 1, scanline, palScreen[(rand() % 2) ? 0x3F : 0x10]);
+
 	cycle++;
 	if (cycle >= 341) {
 		cycle = 0;
 		scanline++;
 		if (scanline >= 261) {
 			scanline = -1;
+			frame_complete = true;
 		}
 	}
 }
