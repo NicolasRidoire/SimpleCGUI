@@ -79,7 +79,7 @@ bool Cartridge::cpuRead(uint16_t addr, uint8_t& data)
 bool Cartridge::cpuWrite(uint16_t addr, uint8_t data)
 {
 	uint32_t mapped_addr = 0;
-	if (pMapper->cpuMapWrite(addr, mapped_addr)) {
+	if (pMapper->cpuMapWrite(addr, mapped_addr, data)) {
 		vPRGMemory[mapped_addr] = data;
 		return true;
 	}

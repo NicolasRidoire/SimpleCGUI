@@ -29,7 +29,7 @@ CPU::CPU() {
 }
 
 CPU::~CPU() {
-
+	delete bus;
 }
 
 uint8_t CPU::read(uint16_t addr) {
@@ -54,6 +54,7 @@ void CPU::SetFlag(FLAGS f, bool v) {
 void CPU::clock() {
 	if (cycles == 0) {
 		opcode = read(PC);
+		printf("0x%04x\n", opcode);
 		SetFlag(U, true);
 		PC++;
 
@@ -253,11 +254,11 @@ uint8_t CPU::XXX() {
 
 uint8_t CPU::ADC() {
 	fetch();
-	uint16_t temp = (uint16_t)A + (uint16_t)fetched + (uint16_t)C;
+	uint16_t temp = (uint16_t)A + (uint16_t)fetched + (uint16_t)GetFlag(C);
 	SetFlag(C, temp > 0xFF); 
 	SetFlag(N, temp & 0x80);
 	SetFlag(Z, (temp & 0x00FF) == 0x00);
-	SetFlag(V, (~((uint16_t)A ^ (uint16_t)fetched) & ((uint16_t)A ^ (uint16_t)temp)));
+	SetFlag(V, (~((uint16_t)A ^ (uint16_t)fetched) & ((uint16_t)A ^ (uint16_t)temp)) & 0x0080);
 	A = temp & 0x00FF;
 	return 1;
 }
@@ -272,15 +273,19 @@ uint8_t CPU::AND() {
 
 uint8_t CPU::ASL() {
 	fetch();
-	SetFlag(C, fetched == 0x80);
-	A = fetched * 2;
-	SetFlag(Z, A == 0x00);
-	SetFlag(N, A == 0x80);
+	uint16_t temp = (uint16_t)fetched << 1;
+	SetFlag(C, (temp & 0xFF00) > 0);
+	SetFlag(Z, (temp & 0x00FF) == 0x00);
+	SetFlag(N, temp & 0x80);
+	if (lookup[opcode].addrmode == &CPU::IMP)
+		A = temp & 0x00FF;
+	else
+		write(addr_abs, temp & 0x00FF);
 	return 0;
 }
 
 uint8_t CPU::BCC() {
-	if (C == 0x00) {
+	if (GetFlag(C) == 0x00) {
 		cycles++;
 		addr_abs = PC + addr_rel;
 		if ((addr_abs & 0xFF00) != (PC & 0xFF00))
@@ -291,7 +296,7 @@ uint8_t CPU::BCC() {
 }
 
 uint8_t CPU::BCS() {
-	if (C == 0x01) {
+	if (GetFlag(C) == 0x01) {
 		cycles++;
 		addr_abs = PC + addr_rel;
 		if ((addr_abs & 0xFF00) != (PC & 0xFF00))
@@ -302,7 +307,7 @@ uint8_t CPU::BCS() {
 }
 
 uint8_t CPU::BEQ() {
-	if (Z == 0x01) {
+	if (GetFlag(Z) == 0x01) {
 		cycles++;
 		addr_abs = PC + addr_rel;
 		if ((addr_abs & 0xFF00) != (PC & 0xFF00))
@@ -322,7 +327,7 @@ uint8_t	CPU::BIT() {
 }
 
 uint8_t CPU::BMI() {
-	if (N == 0x01) {
+	if (GetFlag(N) == 0x01) {
 		cycles++;
 		addr_abs = PC + addr_rel;
 		if ((addr_abs & 0xFF00) != (PC & 0xFF00))
@@ -333,7 +338,7 @@ uint8_t CPU::BMI() {
 }
 
 uint8_t CPU::BNE() {
-	if (Z == 0x00) {
+	if (GetFlag(Z) == 0x00) {
 		cycles++;
 		addr_abs = PC + addr_rel;
 		if ((addr_abs & 0xFF00) != (PC & 0xFF00))
@@ -344,7 +349,7 @@ uint8_t CPU::BNE() {
 }
 
 uint8_t CPU::BPL() {
-	if (N == 0x00) {
+	if (GetFlag(N) == 0x00) {
 		cycles++;
 		addr_abs = PC + addr_rel;
 		if ((addr_abs & 0xFF00) != (PC & 0xFF00))
@@ -355,22 +360,25 @@ uint8_t CPU::BPL() {
 }
 
 uint8_t CPU::BRK() {
-	SetFlag(I, 0x01);
+	PC++;
+
+	SetFlag(I, 1);
 	write(0x0100 + S, (PC >> 8) & 0x00FF);
 	S--;
 	write(0x0100 + S, PC & 0x00FF);
 	S--;
+
+	SetFlag(B, 1);
 	write(0x0100 + S, status);
 	S--;
-	uint8_t lo = read(0xFFFE);
-	uint8_t hi = read(0xFFFF);
-	PC = (hi << 8) | lo;
-	SetFlag(B, 0x01);
+	SetFlag(B, 0);
+
+	PC = (uint16_t)read(0xFFFE) | ((uint16_t)read(0xFFFF) << 8);
 	return 0;
 }
 
 uint8_t CPU::BVC() {
-	if (V == 0x00) {
+	if (GetFlag(V) == 0x00) {
 		cycles++;
 		addr_abs = PC + addr_rel;
 		if ((addr_abs & 0xFF00) != (PC & 0xFF00))
@@ -381,7 +389,7 @@ uint8_t CPU::BVC() {
 }
 
 uint8_t CPU::BVS() {
-	if (V == 0x01) {
+	if (GetFlag(V) == 0x01) {
 		cycles++;
 		addr_abs = PC + addr_rel;
 		if ((addr_abs & 0xFF00) != (PC & 0xFF00))
@@ -441,14 +449,13 @@ uint8_t CPU::CPY() {
 uint8_t CPU::DEC() {
 	fetch();
 	uint16_t temp = (uint16_t)fetched - 0x0001;
-	write(addr_abs, (temp & 0x00FF) == 0x0000);
-	SetFlag(Z, fetched == 0x00);
+	write(addr_abs, temp & 0x00FF);
+	SetFlag(Z, (fetched & 0x00FF) == 0x0000);
 	SetFlag(N, fetched & 0x80);
 	return 0;
 }
 
 uint8_t CPU::DEX() {
-	fetch();
 	X--;
 	SetFlag(Z, X == 0x00);
 	SetFlag(N, X & 0x80);
@@ -456,7 +463,6 @@ uint8_t CPU::DEX() {
 }
 
 uint8_t CPU::DEY() {
-	fetch();
 	Y--;
 	SetFlag(Z, Y == 0x00);
 	SetFlag(N, Y & 0x80);
@@ -475,7 +481,7 @@ uint8_t CPU::INC() {
 	fetch();
 	uint16_t temp = (uint16_t)fetched + 1;
 	write(addr_abs, temp & 0x00FF);
-	SetFlag(Z, (temp & 0x00FF) == 0x00);
+	SetFlag(Z, (temp & 0x00FF) == 0x0000);
 	SetFlag(N, temp & 0x0080);
 	return 0;
 }
@@ -501,9 +507,9 @@ uint8_t CPU::JMP() {
 
 uint8_t CPU::JSR() {
 	PC--;
-	write(S, (PC >> 8) & 0x00FF);
+	write(0x0100 + S, (PC >> 8) & 0x00FF);
 	S--;
-	write(S, PC & 0x00FF);
+	write(0x0100 + S, PC & 0x00FF);
 	S--;
 	PC = addr_abs;
 	return 0;
@@ -535,7 +541,7 @@ uint8_t CPU::LDY() {
 
 uint8_t CPU::LSR() {
 	fetch();
-	SetFlag(C, fetched & 0x01);
+	SetFlag(C, fetched & 0x0001);
 	uint16_t temp = (uint16_t)fetched >> 1;
 	SetFlag(Z, (fetched & 0x00FF) == 0x0000);
 	SetFlag(N, fetched & 0x0080);
@@ -547,6 +553,16 @@ uint8_t CPU::LSR() {
 }
 
 uint8_t CPU::NOP() {
+	switch (opcode) {
+	case 0x1C:
+	case 0x3C:
+	case 0x5C:
+	case 0x7C:
+	case 0xDC:
+	case 0xFC:
+		return 1;
+		break;
+	}
 	return 0;
 }
 
@@ -590,7 +606,7 @@ uint8_t CPU::PLP() {
 uint8_t CPU::ROL() {
 	fetch();
 	uint16_t temp = (uint16_t)(fetched << 1) | GetFlag(C);
-	SetFlag(C, temp & 0x0100);
+	SetFlag(C, temp & 0xFF00);
 	SetFlag(Z, (temp & 0x00FF) == 0x0000);
 	SetFlag(N, temp & 0x0080);
 	if (lookup[opcode].addrmode == &CPU::IMP)
@@ -602,7 +618,7 @@ uint8_t CPU::ROL() {
 
 uint8_t CPU::ROR() {
 	fetch();
-	uint16_t temp = (uint16_t)(GetFlag(C) << 7) | (uint16_t)fetched;
+	uint16_t temp = (uint16_t)(GetFlag(C) << 7) | (uint16_t)(fetched >> 1);
 	SetFlag(C, fetched & 0x01);
 	SetFlag(Z, (temp & 0x00FF) == 0x0000);
 	SetFlag(N, temp & 0x80);
@@ -637,10 +653,10 @@ uint8_t CPU::RTS() {
 uint8_t CPU::SBC() {
 	fetch();
 	uint16_t value = ((uint16_t)fetched) ^ 0x00FF;
-	uint16_t temp = (uint16_t)A + value + (uint16_t)C;
-	SetFlag(V, (~((uint16_t)A ^ (uint16_t)fetched) & ((uint16_t)A ^ (uint16_t)temp)));
-	SetFlag(C, temp & 0x00FF);
-	SetFlag(Z, ((temp & 0x00FF) == 0));
+	uint16_t temp = (uint16_t)A + value + (uint16_t)GetFlag(C);
+	SetFlag(V, ((temp ^ (uint16_t)A) & (temp ^ value)) & 0x0080);
+	SetFlag(C, temp & 0xFF00);
+	SetFlag(Z, ((temp & 0x00FF) == 0x0000));
 	SetFlag(N, temp & 0x0080);
 	A = temp & 0x00FF;
 	return 1;
@@ -714,4 +730,134 @@ uint8_t CPU::TYA() {
 	SetFlag(Z, A == 0x00);
 	SetFlag(N, A & 0x80);
 	return 0;
+}
+
+bool CPU::complete()
+{
+	return cycles == 0;
+}
+
+// This is the disassembly function. Its workings are not required for emulation.
+// It is merely a convenience function to turn the binary instruction code into
+// human readable form. Its included as part of the emulator because it can take
+// advantage of many of the CPUs internal operations to do this.
+std::map<uint16_t, std::string> CPU::disassemble(uint16_t nStart, uint16_t nStop)
+{
+	uint32_t addr = nStart;
+	uint8_t value = 0x00, lo = 0x00, hi = 0x00;
+	std::map<uint16_t, std::string> mapLines;
+	uint16_t line_addr = 0;
+
+	// A convenient utility to convert variables into
+	// hex strings because "modern C++"'s method with 
+	// streams is atrocious
+	auto hex = [](uint32_t n, uint8_t d)
+		{
+			std::string s(d, '0');
+			for (int i = d - 1; i >= 0; i--, n >>= 4)
+				s[i] = "0123456789ABCDEF"[n & 0xF];
+			return s;
+		};
+
+	// Starting at the specified address we read an instruction
+	// byte, which in turn yields information from the lookup table
+	// as to how many additional bytes we need to read and what the
+	// addressing mode is. I need this info to assemble human readable
+	// syntax, which is different depending upon the addressing mode
+
+	// As the instruction is decoded, a std::string is assembled
+	// with the readable output
+	while (addr <= (uint32_t)nStop)
+	{
+		line_addr = addr;
+
+		// Prefix line with instruction address
+		std::string sInst = "$" + hex(addr, 4) + ": ";
+
+		// Read instruction, and get its readable name
+		uint8_t opcode = bus->cpuRead(addr, true); addr++;
+		sInst += lookup[opcode].name + " ";
+
+		// Get oprands from desired locations, and form the
+		// instruction based upon its addressing mode. These
+		// routines mimmick the actual fetch routine of the
+		// 6502 in order to get accurate data as part of the
+		// instruction
+		if (lookup[opcode].addrmode == &CPU::IMP)
+		{
+			sInst += " {IMP}";
+		}
+		else if (lookup[opcode].addrmode == &CPU::IMM)
+		{
+			value = bus->cpuRead(addr, true); addr++;
+			sInst += "#$" + hex(value, 2) + " {IMM}";
+		}
+		else if (lookup[opcode].addrmode == &CPU::ZP0)
+		{
+			lo = bus->cpuRead(addr, true); addr++;
+			hi = 0x00;
+			sInst += "$" + hex(lo, 2) + " {ZP0}";
+		}
+		else if (lookup[opcode].addrmode == &CPU::ZPX)
+		{
+			lo = bus->cpuRead(addr, true); addr++;
+			hi = 0x00;
+			sInst += "$" + hex(lo, 2) + ", X {ZPX}";
+		}
+		else if (lookup[opcode].addrmode == &CPU::ZPY)
+		{
+			lo = bus->cpuRead(addr, true); addr++;
+			hi = 0x00;
+			sInst += "$" + hex(lo, 2) + ", Y {ZPY}";
+		}
+		else if (lookup[opcode].addrmode == &CPU::IZX)
+		{
+			lo = bus->cpuRead(addr, true); addr++;
+			hi = 0x00;
+			sInst += "($" + hex(lo, 2) + ", X) {IZX}";
+		}
+		else if (lookup[opcode].addrmode == &CPU::IZY)
+		{
+			lo = bus->cpuRead(addr, true); addr++;
+			hi = 0x00;
+			sInst += "($" + hex(lo, 2) + "), Y {IZY}";
+		}
+		else if (lookup[opcode].addrmode == &CPU::ABS)
+		{
+			lo = bus->cpuRead(addr, true); addr++;
+			hi = bus->cpuRead(addr, true); addr++;
+			sInst += "$" + hex((uint16_t)(hi << 8) | lo, 4) + " {ABS}";
+		}
+		else if (lookup[opcode].addrmode == &CPU::ABX)
+		{
+			lo = bus->cpuRead(addr, true); addr++;
+			hi = bus->cpuRead(addr, true); addr++;
+			sInst += "$" + hex((uint16_t)(hi << 8) | lo, 4) + ", X {ABX}";
+		}
+		else if (lookup[opcode].addrmode == &CPU::ABY)
+		{
+			lo = bus->cpuRead(addr, true); addr++;
+			hi = bus->cpuRead(addr, true); addr++;
+			sInst += "$" + hex((uint16_t)(hi << 8) | lo, 4) + ", Y {ABY}";
+		}
+		else if (lookup[opcode].addrmode == &CPU::IND)
+		{
+			lo = bus->cpuRead(addr, true); addr++;
+			hi = bus->cpuRead(addr, true); addr++;
+			sInst += "($" + hex((uint16_t)(hi << 8) | lo, 4) + ") {IND}";
+		}
+		else if (lookup[opcode].addrmode == &CPU::REL)
+		{
+			value = bus->cpuRead(addr, true); addr++;
+			sInst += "$" + hex(value, 2) + " [$" + hex(addr + (int8_t)value, 4) + "] {REL}";
+		}
+
+		// Add the formed string to a std::map, using the instruction's
+		// address as the key. This makes it convenient to look for later
+		// as the instructions are variable in length, so a straight up
+		// incremental index is not sufficient.
+		mapLines[line_addr] = sInst;
+	}
+
+	return mapLines;
 }

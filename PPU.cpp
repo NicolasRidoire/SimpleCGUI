@@ -78,7 +78,16 @@ PPU::PPU()
 }
 
 PPU::~PPU() {
-
+	delete sprScreen;
+	delete sprNameTable[0];
+	delete sprNameTable[1];
+	delete sprPatternTable[0];
+	delete sprPatternTable[1];
+	delete tblName[0];
+	delete tblName[1];
+	delete tblPalette;
+	delete tblPattern[0];
+	delete tblPattern[1];
 }
 
 void PPU::connectCartridge(const std::shared_ptr<Cartridge>& cartridge) {
@@ -379,7 +388,7 @@ uint8_t PPU::ppuRead(uint16_t addr, bool rdonly) {
 
 void PPU::ppuWrite(uint16_t addr, uint8_t data) {
 	addr &= 0x3FFF;
-	if (cart->ppuRead(addr, data)) {
+	if (cart->ppuWrite(addr, data)) {
 
 	}
 	else if (addr >= 0x0000 && addr <= 0x1FFF) {

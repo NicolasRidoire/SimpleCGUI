@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <map>
 
 class Bus;
 
@@ -40,6 +41,10 @@ public:
 	void reset();
 	void nmi(); // Non maskable interrupt request
 	void irq(); // Interrupt request
+
+	bool complete();
+
+	std::map<uint16_t, std::string> disassemble(uint16_t nStart, uint16_t nStop);
 
 private:
 
