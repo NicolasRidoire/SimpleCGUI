@@ -54,6 +54,7 @@ void CPU::SetFlag(FLAGS f, bool v) {
 void CPU::clock() {
 	if (cycles == 0) {
 		opcode = read(PC);
+		SetFlag(U, true);
 		PC++;
 
 		cycles = lookup[opcode].cycles;
@@ -62,25 +63,25 @@ void CPU::clock() {
 		uint8_t additional_cycle2 = (this->*lookup[opcode].operate)(); // Use the pointer to the right instruction function
 
 		cycles += (additional_cycle1 & additional_cycle2);
+		SetFlag(U, true);
 	}
-
 	cycles--;
 }
 
 void CPU::reset() {
+	uint16_t lo = read(0xFFFC);
+	uint16_t hi = read(0xFFFD);
+
+	PC = (hi << 8) | lo;
+
 	A = X = Y = 0;
 	S = 0xFD;
 	status = 0x00 | U;
-	addr_abs = 0xFFFC;
-	uint16_t lo = read(addr_abs + 0);
-	uint16_t hi = read(addr_abs + 1);
-
-	PC = (hi << 8) | lo;
 
 	addr_rel = 0x0000;
 	addr_abs = 0x0000;
 	fetched = 0x00;
-
+	printf("0x%04x", PC);
 	cycles = 8;
 }
 
@@ -246,7 +247,8 @@ uint8_t CPU::fetch() {
 }
 
 uint8_t CPU::XXX() {
-	printf("Error : unknown opcode at address %d", PC);
+	printf("Error : unknown opcode at address 0x%04x", PC);
+	Sleep(1000);
 	return 0;
 }
 

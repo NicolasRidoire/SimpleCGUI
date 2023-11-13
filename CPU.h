@@ -38,6 +38,8 @@ public:
 
 	void clock();
 	void reset();
+	void nmi(); // Non maskable interrupt request
+	void irq(); // Interrupt request
 
 private:
 
@@ -58,9 +60,6 @@ private:
 
 	uint8_t XXX(); // Illegal opcodes
 
-	void irq(); // Interrupt request
-	void nmi(); // Non maskable interrupt request
-
 	uint8_t read(uint16_t addr);
 	void write(uint16_t addr, uint8_t data);
 
@@ -68,7 +67,7 @@ private:
 	void SetFlag(FLAGS f, bool v);
 
 	uint8_t fetch();
-	uint8_t fetched = 0x00l;
+	uint8_t fetched = 0x00;
 
 	uint16_t addr_abs = 0x0000; // Absolute address 16 bits
 	uint16_t addr_rel = 0x00; // relative address

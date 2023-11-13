@@ -148,6 +148,7 @@
     <Text Include="Implemented.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="D:\Downloads\Donkey Kong (World) (Rev A)\Donkey Kong (World) (Rev A).nes" />
     <None Include="D:\Downloads\Super Mario Bros. (World).nes" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

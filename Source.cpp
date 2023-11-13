@@ -17,7 +17,7 @@ private:
 	bool OnUserCreate()
 	{
 		// Load the cartridge
-		cart = std::make_shared<Cartridge>("./Super Mario Bros. (World).nes");
+		cart = std::make_shared<Cartridge>("Donkey Kong (World) (Rev A).nes");
 		if (!cart->isImageValid())
 			return false;
 

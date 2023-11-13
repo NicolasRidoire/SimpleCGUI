@@ -38,7 +38,9 @@ void Bus::insertCartridge(const std::shared_ptr<Cartridge>& cartridge) {
 }
 
 void Bus::reset() {
+	cart->reset();
 	cpu.reset();
+	ppu.reset();
 	nSystemClockCounter = 0;
 }
 
@@ -47,6 +49,9 @@ void Bus::clock() {
 	if (nSystemClockCounter % 3 == 0) {
 		cpu.clock();
 	}
-
+	if (ppu.nmi) {
+		ppu.nmi = false;
+		cpu.nmi();
+	}
 	nSystemClockCounter++;
 }
