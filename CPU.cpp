@@ -29,7 +29,7 @@ CPU::CPU() {
 }
 
 CPU::~CPU() {
-	delete bus;
+
 }
 
 uint8_t CPU::read(uint16_t addr) {
@@ -54,7 +54,6 @@ void CPU::SetFlag(FLAGS f, bool v) {
 void CPU::clock() {
 	if (cycles == 0) {
 		opcode = read(PC);
-		printf("0x%04x\n", opcode);
 		SetFlag(U, true);
 		PC++;
 
@@ -109,15 +108,15 @@ void CPU::irq() {
 
 void CPU::nmi() {
 	write(0x0100 + S, (PC >> 8) & 0x00FF);
-	S++;
+	S--;
 	write(0x0100 + S, PC & 0x00FF);
-	S++;
+	S--;
 
 	SetFlag(B, 0);
 	SetFlag(U, 1);
 	SetFlag(I, 1);
 	write(0x0100 + S, status);
-	S++;
+	S--;
 
 	addr_abs = 0xFFFA;
 	uint16_t lo = read(addr_abs + 0);

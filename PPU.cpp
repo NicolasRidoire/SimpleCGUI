@@ -83,11 +83,6 @@ PPU::~PPU() {
 	delete sprNameTable[1];
 	delete sprPatternTable[0];
 	delete sprPatternTable[1];
-	delete tblName[0];
-	delete tblName[1];
-	delete tblPalette;
-	delete tblPattern[0];
-	delete tblPattern[1];
 }
 
 void PPU::connectCartridge(const std::shared_ptr<Cartridge>& cartridge) {
