@@ -93,7 +93,7 @@ public:
 	uint8_t ppuRead(uint16_t addr, bool rdonly = false);
 	void ppuWrite(uint16_t addr, uint8_t data);
 
-	void connectCartridge(const std::shared_ptr<Cartridge>& cartridge);
+	void ConnectCartridge(const std::shared_ptr<Cartridge>& cartridge);
 	void clock();
 	void reset();
 
