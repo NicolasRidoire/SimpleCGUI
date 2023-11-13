@@ -81,7 +81,6 @@ void CPU::reset() {
 	addr_rel = 0x0000;
 	addr_abs = 0x0000;
 	fetched = 0x00;
-	printf("0x%04x", PC);
 	cycles = 8;
 }
 
@@ -247,7 +246,7 @@ uint8_t CPU::fetch() {
 }
 
 uint8_t CPU::XXX() {
-	printf("Error : unknown opcode at address 0x%04x", PC);
+	printf("Error : unknown opcode 0x%04x at address 0x%04x", opcode, PC);
 	Sleep(1000);
 	return 0;
 }

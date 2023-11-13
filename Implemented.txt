@@ -1,23 +1,17 @@
 CPU :
-	- Instructions :
-		- LDA (TODO INX and INY)
-		- LDX
-		- LDY
-		- STA (TODO INX and INY)
-		- STX
-		- STY
-		- TAX
-		- TAY
-		- TXA
-		- TYA
-		- TSX
-		- TXS
-		- PHA
-		- PHP
-		- PLA
-		- PLP
+	- All instructions implemented
 
-	- ProgramCounter start address ?
+PPU :
+	- Background rendering
+
+Mappers :
+	- Mapper 0
+
+Problem :
+	- Illegal opcode.
+		-> Problem with mapper
+		-> Problem with address
+		-> IDK
 
 Memory :
 	- 2kb RAM (0x0000 - 0x07FF) -> Stack (0x0100 - 0x01FF)
