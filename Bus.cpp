@@ -1,9 +1,7 @@
 #include "Bus.h"
 
 Bus::Bus() {
-	cpu.ConnectBus(this);
-
-	for (auto& i : cpuRam) i = 0x00;
+	cpu.ConnectBus(this);	
 }
 
 Bus::~Bus() {
