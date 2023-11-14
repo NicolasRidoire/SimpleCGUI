@@ -87,15 +87,15 @@ void CPU::reset() {
 void CPU::irq() {
 	if (GetFlag(I) == 0) {
 		write(0x0100 + S, (PC >> 8) & 0x00FF);
-		S++;
+		S--;
 		write(0x0100 + S, PC & 0x00FF);
-		S++;
+		S--;
 
 		SetFlag(B, 0);
 		SetFlag(U, 1);
 		SetFlag(I, 1);
 		write(0x0100 + S, status);
-		S++;
+		S--;
 
 		addr_abs = 0xFFFE;
 		uint16_t lo = read(addr_abs + 0);
@@ -617,10 +617,10 @@ uint8_t CPU::ROL() {
 
 uint8_t CPU::ROR() {
 	fetch();
-	uint16_t temp = (uint16_t)(GetFlag(C) << 7) | (uint16_t)(fetched >> 1);
+	uint16_t temp = (uint16_t)(GetFlag(C) << 7) | (fetched >> 1);
 	SetFlag(C, fetched & 0x01);
-	SetFlag(Z, (temp & 0x00FF) == 0x0000);
-	SetFlag(N, temp & 0x80);
+	SetFlag(Z, (temp & 0x00FF) == 0x00);
+	SetFlag(N, temp & 0x0080);
 	if (lookup[opcode].addrmode == &CPU::IMP)
 		A = temp & 0x00FF;
 	else
@@ -642,9 +642,11 @@ uint8_t CPU::RTI() {
 
 uint8_t CPU::RTS() {
 	S++;
-	PC = read(0x0100 + S);
+	PC = (uint16_t)read(0x0100 + S);
 	S++;
-	PC |= read(0x0100 + S) << 8;
+	PC |= (uint16_t)read(0x0100 + S) << 8;
+	printf("S = 0x%04x\n", S);
+	printf("PC = 0x%04x\n", PC);
 	PC++;
 	return 0;
 }
@@ -653,7 +655,7 @@ uint8_t CPU::SBC() {
 	fetch();
 	uint16_t value = ((uint16_t)fetched) ^ 0x00FF;
 	uint16_t temp = (uint16_t)A + value + (uint16_t)GetFlag(C);
-	SetFlag(V, ((temp ^ (uint16_t)A) & (temp ^ value)) & 0x0080);
+	SetFlag(V, (temp ^ (uint16_t)A) & (temp ^ value) & 0x0080);
 	SetFlag(C, temp & 0xFF00);
 	SetFlag(Z, ((temp & 0x00FF) == 0x0000));
 	SetFlag(N, temp & 0x0080);

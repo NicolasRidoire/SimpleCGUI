@@ -14,7 +14,7 @@ private:
 	std::shared_ptr<Cartridge> cart;
 	bool bEmulationRun = false;
 	float fResidualTime = 0.0f;
-
+	int f = 0;
 	uint8_t nSelectedPalette = 0x00;
 
 private:
@@ -99,7 +99,7 @@ private:
 	bool OnUserCreate()
 	{
 		// Load the cartridge
-		cart = std::make_shared<Cartridge>("./Super Mario Bros. (World).nes");
+		cart = std::make_shared<Cartridge>("./Donkey Kong (World) (Rev A).nes");
 
 		if (!cart->isImageValid())
 			return false;
@@ -149,7 +149,7 @@ private:
 
 			if (GetKey(olc::Key::D).bPressed)
 			{
-				for (int i = 0; i < 10; i++) {
+				for (int i = 0; i < 7600; i++) {
 					// Clock enough times to execute a whole CPU instruction
 					do { nes.clock(); } while (!nes.cpu.complete());
 					// CPU clock runs slower than system clock, so it may be
@@ -157,6 +157,8 @@ private:
 					// those out
 					do { nes.clock(); } while (nes.cpu.complete());
 				}
+				f++;
+				printf("%d\n", f);
 			}
 
 			// Emulate one whole frame
