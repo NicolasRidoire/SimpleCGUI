@@ -74,6 +74,8 @@ private:
 	uint8_t fetch();
 	uint8_t fetched = 0x00;
 
+	uint16_t temp = 0x0000;
+
 	uint16_t addr_abs = 0x0000; // Absolute address 16 bits
 	uint16_t addr_rel = 0x00; // relative address
 	uint8_t opcode = 0x00;
