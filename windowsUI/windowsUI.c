@@ -42,7 +42,7 @@ ERRORS initWindow(const char* windowClassName, HINSTANCE hInstance) {
         .hInstance = hInstance,
         .hIcon = LoadIcon(NULL, IDI_APPLICATION),
         .hCursor = LoadCursor(NULL, IDC_ARROW),
-        .hbrBackground = (HBRUSH)(COLOR_WINDOW + 1),
+        .hbrBackground = CreateSolidBrush(RGB(30, 30, 46)),
         .lpszMenuName = NULL,
         .lpszClassName = windowClassName,
         .hIconSm = LoadIcon(NULL, IDI_APPLICATION)
