@@ -1,8 +1,38 @@
 #include "windowsUI.h"
-
-#undef createWindow
+#include <X11/X.h>
+#include <X11/Xlib.h>
 
 window mainWin;
+
+#ifdef __linux__
+
+ERRORS initWindow(const char* windowClassName, void *hInstance) {
+    mainWin.display = XOpenDisplay(NULL);
+    mainWin.rootWin = XDefaultRootWindow(mainWin.display);
+    return OK;
+}
+
+ERRORS createWindow(const char* name, long int dwstyle, int x, int y, int width, int height) {
+    XSetWindowAttributes windowAttributes = {};
+    windowAttributes.background_pixel = 0x1e1e2e;
+    mainWin.win = XCreateWindow(mainWin.display, mainWin.rootWin, x, y, width, height, 1, 
+            CopyFromParent, CopyFromParent, CopyFromParent, CWBackPixel, &windowAttributes);
+    XMapWindow(mainWin.display, mainWin.win);
+    return OK;
+}
+
+int mainLoop() {
+    bool IsWindowOpen = true;
+    while (IsWindowOpen) {
+        XEvent winEvent = {};
+        XNextEvent(mainWin.display, &winEvent);
+    }
+    return 0;
+}
+
+#else
+
+#undef createWindow
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
@@ -53,7 +83,7 @@ ERRORS initWindow(const char* windowClassName, HINSTANCE hInstance) {
     return OK;
 }
 
-ERRORS createWindow(const char* name, DWORD dwstyle, int x, int y, int nWidth, int nHeight) {
+ERRORS createWindow(const char* name, DWORD dwstyle, int x, int y, int width, int height) {
     HWND hwnd = CreateWindow(mainWin.wc.lpszClassName, name, dwstyle, 
         x, y, nWidth, nHeight, NULL, NULL, mainWin.wc.hInstance, NULL);
     if (hwnd == NULL)
@@ -74,3 +104,5 @@ int mainLoop() {
     }
     return msg.wParam;
 }
+#endif
+
