@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #ifdef __linux__
+#include <X11/X.h>
 #include <X11/Xlib.h>
 
 typedef struct {
@@ -10,7 +11,7 @@ typedef struct {
     Window win;
 } window;
 
-#elif _WINVER
+#elif _WIN32
 #include <windows.h>
 #include <wingdi.h>
 #include <winuser.h>

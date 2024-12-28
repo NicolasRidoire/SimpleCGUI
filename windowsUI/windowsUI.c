@@ -1,6 +1,4 @@
 #include "windowsUI.h"
-#include <X11/X.h>
-#include <X11/Xlib.h>
 
 window mainWin;
 
@@ -65,7 +63,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return 0;
 }
 
-ERRORS initWindow(const char* windowClassName, HINSTANCE hInstance) {
+ERRORS initWindow(const char* windowClassName, void *hInstance) {
     mainWin.wc = (WNDCLASSEX){
         .cbSize = sizeof(WNDCLASSEX),
         .lpfnWndProc = WndProc,
@@ -83,9 +81,9 @@ ERRORS initWindow(const char* windowClassName, HINSTANCE hInstance) {
     return OK;
 }
 
-ERRORS createWindow(const char* name, DWORD dwstyle, int x, int y, int width, int height) {
+ERRORS createWindow(const char* name, long int dwstyle, int x, int y, int width, int height) {
     HWND hwnd = CreateWindow(mainWin.wc.lpszClassName, name, dwstyle, 
-        x, y, nWidth, nHeight, NULL, NULL, mainWin.wc.hInstance, NULL);
+        x, y, width, height, NULL, NULL, mainWin.wc.hInstance, NULL);
     if (hwnd == NULL)
         return INIT_ERR;
     mainWin.hwnd = hwnd;
