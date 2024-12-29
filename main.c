@@ -1,4 +1,4 @@
-#include "windowsUI/windowsUI.c"
+#include "windowUI/windowUI.c"
 
 #ifdef __linux__
 int main() {
@@ -7,15 +7,13 @@ int main() {
     if (err != OK) 
         return err;
 
-    err = createWindow("NES Emulator",
-            0, 0, 0, 800, 600);
+    err = createWindow("NES Emulator", 0, 0, 0, 800, 600);
     if (err != OK)
         return err;
 
-
     err = mainLoop();
 
-    printf("Finished : %d", err);
+    printf("Finished : %d\n", err);
     return err;
 }
 

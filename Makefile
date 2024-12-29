@@ -7,5 +7,5 @@ else
 endif
 
 emu-nes:
-	gcc main.c $(CCFLAGS) -o $(EXEC)
+	gcc main.c $(CCFLAGS) -o $(EXEC) -Wall
 	./$(EXEC)

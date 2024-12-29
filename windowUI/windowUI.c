@@ -1,38 +1,69 @@
-#include "windowsUI.h"
+#include "windowUI.h"
+#include <X11/X.h>
 
 window mainWin;
 
 #ifdef __linux__
 
+Atom EventDeleteWindow;
+
 ERRORS initWindow(const char* windowClassName, void *hInstance) {
     mainWin.display = XOpenDisplay(NULL);
     mainWin.rootWin = XDefaultRootWindow(mainWin.display);
+    int defaultScreen = XDefaultScreen(mainWin.display);
+    mainWin.gc = XDefaultGC(mainWin.display, defaultScreen);
     return OK;
 }
 
 ERRORS createWindow(const char* name, long int dwstyle, int x, int y, int width, int height) {
     XSetWindowAttributes windowAttributes = {};
     windowAttributes.background_pixel = 0x1e1e2e;
+    windowAttributes.event_mask = KeyPressMask | KeyReleaseMask | ExposureMask;
+    int attributeValueMask = CWBackPixel | CWEventMask;
     mainWin.win = XCreateWindow(mainWin.display, mainWin.rootWin, x, y, width, height, 1, 
-            CopyFromParent, CopyFromParent, CopyFromParent, CWBackPixel, &windowAttributes);
+            CopyFromParent, CopyFromParent, CopyFromParent, attributeValueMask, &windowAttributes);
     XMapWindow(mainWin.display, mainWin.win);
+    XStoreName(mainWin.display, mainWin.win, name);
+    EventDeleteWindow = XInternAtom(mainWin.display, "WM_DELETE_WINDOW", 0);
+    XSetWMProtocols(mainWin.display, mainWin.win, &EventDeleteWindow, 1);
     return OK;
 }
 
+void eventParsing(XEvent generalEvent, bool* isWindowOpen) {
+    switch (generalEvent.type) {
+        case ClientMessage: 
+            {
+                XClientMessageEvent* event = (XClientMessageEvent*) &generalEvent;
+                if (event->data.l[0] == EventDeleteWindow) {
+                    XDestroyWindow(mainWin.display, mainWin.win);
+                    *isWindowOpen = false;
+                }
+            } break;
+    }
+}
+
 int mainLoop() {
-    bool IsWindowOpen = true;
-    while (IsWindowOpen) {
-        XEvent winEvent = {};
-        XNextEvent(mainWin.display, &winEvent);
+    bool isWindowOpen = true;
+    XEvent event = {};
+    while (isWindowOpen) {
+        XSetForeground(mainWin.display, mainWin.gc, 0x00ff00);
+        XFillRectangle(mainWin.display, mainWin.win, mainWin.gc, 100, 100, 100, 25);
+        XNextEvent(mainWin.display, &event);
+        eventParsing(event, &isWindowOpen);       
+        XClearWindow(mainWin.display, mainWin.win);
     }
     return 0;
+}
+
+void addRectangle(int x, int y, int width, int height) {
+    printf("Not implemented");
 }
 
 #else
 
 #undef createWindow
 
-LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK eventParsing(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CLOSE:
             DestroyWindow(hwnd);
@@ -66,7 +97,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 ERRORS initWindow(const char* windowClassName, void *hInstance) {
     mainWin.wc = (WNDCLASSEX){
         .cbSize = sizeof(WNDCLASSEX),
-        .lpfnWndProc = WndProc,
+        .lpfnWndProc = eventParsing,
         .hInstance = hInstance,
         .hIcon = LoadIcon(NULL, IDI_APPLICATION),
         .hCursor = LoadCursor(NULL, IDC_ARROW),
@@ -101,6 +132,10 @@ int mainLoop() {
         DispatchMessage(&msg);
     }
     return msg.wParam;
+}
+
+void addRectangle(int x, int y, int width, int height) {
+    printf("Not implemented");
 }
 #endif
 
