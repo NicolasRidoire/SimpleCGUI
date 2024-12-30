@@ -1,11 +1,12 @@
 #include "windowUI.h"
-#include <X11/X.h>
+#include <X11/Xlib.h>
 
-window mainWin;
+static window mainWin;
 
 #ifdef __linux__
 
-Atom EventDeleteWindow;
+// Window related
+static Atom EventDeleteWindow;
 
 ERRORS initWindow(const char* windowClassName, void *hInstance) {
     mainWin.display = XOpenDisplay(NULL);
@@ -31,6 +32,14 @@ ERRORS createWindow(const char* name, long int dwstyle, int x, int y, int width,
 
 void eventParsing(XEvent generalEvent, bool* isWindowOpen) {
     switch (generalEvent.type) {
+        case Expose: 
+            {
+                DrawCallback* callback = mainWin.firstDraw;
+                while (callback != NULL) {
+                    callback->draw(callback->params);
+                    callback = callback->next;
+                }
+            } break;
         case ClientMessage: 
             {
                 XClientMessageEvent* event = (XClientMessageEvent*) &generalEvent;
@@ -46,21 +55,49 @@ int mainLoop() {
     bool isWindowOpen = true;
     XEvent event = {};
     while (isWindowOpen) {
-        XSetForeground(mainWin.display, mainWin.gc, 0x00ff00);
-        XFillRectangle(mainWin.display, mainWin.win, mainWin.gc, 100, 100, 100, 25);
         XNextEvent(mainWin.display, &event);
         eventParsing(event, &isWindowOpen);       
-        XClearWindow(mainWin.display, mainWin.win);
     }
     return 0;
 }
 
-void addRectangle(int x, int y, int width, int height) {
-    printf("Not implemented");
+// Callbacks
+void registerDrawCallback(void (*callback)(DrawParams), DrawParams params) {
+    DrawCallback* drawCallback = (DrawCallback*)malloc(sizeof(DrawCallback));
+    drawCallback->draw = callback;
+    // Initialize mainWin.firstDraw or else no next on the first register
+    DrawCallback* lastCallback = mainWin.firstDraw->next;
+    while (lastCallback != NULL) {
+        lastCallback = lastCallback->next;
+    }
+    lastCallback->next = drawCallback;
+}
+
+// Drawing functions
+void drawRectangle(DrawParams params) {
+    RectParams rectParams = params.rectParams;
+    XSetForeground(mainWin.display, mainWin.gc, rectParams.color);
+    XFillRectangle(mainWin.display, mainWin.win, mainWin.gc, rectParams.x, 
+            rectParams.y, rectParams.width, rectParams.height);
+}
+
+// Drawing API
+void addRectangle(int x, int y, int width, int height, Color rgb) {
+    DrawParams params = {
+        .rectParams = {
+            .color = fromColorToHex(rgb),
+            .x = x,
+            .y = y,
+            .width = width,
+            .height = height
+        }
+    };
+    registerDrawCallback(&drawRectangle, params);
 }
 
 #else
 
+// Window related
 #undef createWindow
 
 LRESULT CALLBACK eventParsing(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -134,8 +171,22 @@ int mainLoop() {
     return msg.wParam;
 }
 
+// Drawing related
 void addRectangle(int x, int y, int width, int height) {
     printf("Not implemented");
 }
 #endif
 
+// Utilities
+Color fromHexToColor(unsigned long int rgb) {
+    Color converted = {
+        .red = (rgb >> 16) & 0xff,
+        .green = (rgb >> 8) & 0xff,
+        .blue = rgb & 0xff
+    };
+    return converted;
+}
+
+unsigned long int fromColorToHex(Color rgb) {
+    return (rgb.red << 16) + (rgb.green << 8) + rgb.blue;
+}

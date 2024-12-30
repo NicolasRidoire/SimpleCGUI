@@ -1,11 +1,11 @@
 ifeq ($(OS), Windows_NT)
 	CCFLAGS = -lgdi32
-	EXEC = main.exe
+	EXEC = emu-nes.exe
 else
 	CCFLAGS = -lX11
-	EXEC = main
+	EXEC = emu-nes
 endif
 
-emu-nes:
+commands:
 	gcc main.c $(CCFLAGS) -o $(EXEC) -Wall
 	./$(EXEC)

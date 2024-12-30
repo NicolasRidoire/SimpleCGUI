@@ -11,9 +11,15 @@ int main() {
     if (err != OK)
         return err;
 
+    Color rectColor = {
+        .red = 0,
+        .green = 255,
+        .blue = 0
+    };
+    addRectangle(0, 0, 100, 25, rectColor);
     err = mainLoop();
 
-    printf("Finished : %d\n", err);
+    printf("Finished with error code %d\n", err);
     return err;
 }
 
