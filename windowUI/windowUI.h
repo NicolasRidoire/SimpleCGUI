@@ -20,9 +20,11 @@ typedef union {
 } DrawParams;
 
 typedef struct DrawCallback {
+    int id;
     void (*draw)(DrawParams);
-    struct DrawCallback* next;
     DrawParams params;
+    struct DrawCallback* previous;
+    struct DrawCallback* next;
 } DrawCallback;
 
 typedef struct {
@@ -66,4 +68,6 @@ Color fromHexToColor(unsigned long int rgb);
 unsigned long int fromColorToHex(Color rgb);
 
 // Drawing related
-void addRectangle(int x, int y, int width, int height, Color rgb);
+int addRectangle(int x, int y, int width, int height, Color rgb);
+void editRectangle(int id, int x, int y, int width, int height, Color rgb);
+void deleteRectangle(int id);

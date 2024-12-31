@@ -1,5 +1,4 @@
 #include "windowUI.h"
-#include <X11/Xlib.h>
 
 static window mainWin;
 
@@ -62,15 +61,62 @@ int mainLoop() {
 }
 
 // Callbacks
-void registerDrawCallback(void (*callback)(DrawParams), DrawParams params) {
-    DrawCallback* drawCallback = (DrawCallback*)malloc(sizeof(DrawCallback));
-    drawCallback->draw = callback;
-    // Initialize mainWin.firstDraw or else no next on the first register
-    DrawCallback* lastCallback = mainWin.firstDraw->next;
-    while (lastCallback != NULL) {
+DrawCallback* getLastDrawCallback() {
+    DrawCallback* lastCallback = mainWin.firstDraw;
+    if (lastCallback == NULL) 
+        return NULL;
+    while (lastCallback->next != NULL) {
         lastCallback = lastCallback->next;
     }
-    lastCallback->next = drawCallback;
+    return lastCallback;
+}
+
+DrawCallback* getDrawCallbackById(int id) {
+    DrawCallback* callback = mainWin.firstDraw;
+    if (callback == NULL) {
+        printf("No drawCallback initialized in the window structure");
+        return NULL;
+    }
+    while (callback->id != id && callback->next != NULL) {
+        callback = callback->next;
+    }
+    if (callback == NULL)
+        printf("No drawCallback with this specific id");
+    return callback;
+}
+
+int registerDrawCallback(void (*callback)(DrawParams), DrawParams params) {
+    DrawCallback* drawCallback = (DrawCallback*)malloc(sizeof(DrawCallback));
+    drawCallback->draw = callback;
+    drawCallback->params = params;
+    drawCallback->previous = NULL;
+    drawCallback->next = NULL;
+    drawCallback->id = 0;
+    DrawCallback* lastCallback = getLastDrawCallback();
+    if (lastCallback == NULL)
+        mainWin.firstDraw = drawCallback;
+    else {
+        drawCallback->id = lastCallback->id+1;
+        drawCallback->previous = lastCallback;
+        lastCallback->next = drawCallback;
+    }
+    return drawCallback->id;
+}
+
+void unregisterDrawCallback(int id) {
+    DrawCallback* callback = getDrawCallbackById(id);
+    if (callback == NULL)
+        return;
+    DrawCallback* previous = callback->previous;
+    DrawCallback* next = callback->next;
+    if (callback == mainWin.firstDraw) {
+        mainWin.firstDraw = next;
+        return;
+    }
+    if (next == NULL)
+        previous->next = NULL;
+    next->previous = previous;
+    free(callback);
 }
 
 // Drawing functions
@@ -82,7 +128,7 @@ void drawRectangle(DrawParams params) {
 }
 
 // Drawing API
-void addRectangle(int x, int y, int width, int height, Color rgb) {
+int addRectangle(int x, int y, int width, int height, Color rgb) {
     DrawParams params = {
         .rectParams = {
             .color = fromColorToHex(rgb),
@@ -92,7 +138,31 @@ void addRectangle(int x, int y, int width, int height, Color rgb) {
             .height = height
         }
     };
-    registerDrawCallback(&drawRectangle, params);
+    return registerDrawCallback(&drawRectangle, params);
+}
+
+void editRectangle(int id, int x, int y, int width, int height, Color rgb) {
+    DrawCallback* callback = getDrawCallbackById(id);
+    if (x >= 0)
+        callback->params.rectParams.x = x;
+    if (y >= 0)
+        callback->params.rectParams.y = y;
+    if (width >= 0)
+        callback->params.rectParams.width = width;
+    if (height >= 0)
+        callback->params.rectParams.height = height;
+    unsigned long int color = fromColorToHex(rgb);
+    if (color >= 0) {
+        callback->params.rectParams.color = color;
+    }
+}
+
+void deleteDraw(int id) {
+    unregisterDrawCallback(id);  
+}
+
+void deleteRectangle(int id) {
+    deleteDraw(id);
 }
 
 #else

@@ -16,7 +16,16 @@ int main() {
         .green = 255,
         .blue = 0
     };
-    addRectangle(0, 0, 100, 25, rectColor);
+    Color rectColor2 = {
+        .red = 255,
+        .green = 0,
+        .blue = 0
+    };
+    int rectId1 = addRectangle(0, 0, 100, 25, rectColor);
+    int rectId2 = addRectangle(200, 200, 100, 25, rectColor);
+    editRectangle(rectId2, -1, -1, 200, 200, rectColor2);
+    deleteRectangle(rectId1);
+
     err = mainLoop();
 
     printf("Finished with error code %d\n", err);
