@@ -1,4 +1,4 @@
-#include "windowUI/windowUI.c"
+#include "SimpleCGUI/SimpleCGUI.c"
 
 #ifdef __linux__
 int main() {

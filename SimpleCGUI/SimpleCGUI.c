@@ -1,4 +1,4 @@
-#include "windowUI.h"
+#include "SimpleCGUI.h"
 
 static window mainWin;
 
@@ -242,8 +242,9 @@ int mainLoop() {
 }
 
 // Drawing related
-void addRectangle(int x, int y, int width, int height) {
+int addRectangle(int x, int y, int width, int height, Color rgb) {
     printf("Not implemented");
+    return 0;
 }
 #endif
 
