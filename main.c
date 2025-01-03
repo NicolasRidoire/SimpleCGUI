@@ -1,11 +1,24 @@
 #include "SimpleCGUI/SimpleCGUI.c"
 
-#ifdef __linux__
-int main() {
+int demo();
+#ifdef _WIN32
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     const char windowClassName[] = "NESEmulatorClass";
-    ERRORS err = initWindow(windowClassName, NULL);
+    ERRORS err = initWindow(windowClassName, hInstance);
     if (err != OK) 
         return err;
+    return demo();
+}
+#elif __linux__
+int main() {
+    ERRORS err = initWindow(NULL, NULL);
+    if (err != OK) 
+        return err;
+    return demo();
+}
+#endif
+int demo() {
+    ERRORS err;
 
     err = createWindow("NES Emulator", 0, 0, 0, 800, 600);
     if (err != OK)
@@ -32,25 +45,3 @@ int main() {
     return err;
 }
 
-#else
-
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-    const char windowClassName[] = "NESEmulatorClass";
-    ERRORS err = initWindow(windowClassName, hInstance);
-    if (err != OK) 
-        return err;
-
-    err = createWindow("NES Emulator",
-            WS_OVERLAPPEDWINDOW,
-            CW_USEDEFAULT, CW_USEDEFAULT, 800, 600);
-    if (err != OK)
-        return err;
-
-
-    err = mainLoop();
-
-    printf("Finished : %d", err);
-    return err;
-}
-
-#endif

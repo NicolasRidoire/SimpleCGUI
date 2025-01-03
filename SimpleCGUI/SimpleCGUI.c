@@ -74,14 +74,14 @@ DrawCallback* getLastDrawCallback() {
 DrawCallback* getDrawCallbackById(int id) {
     DrawCallback* callback = mainWin.firstDraw;
     if (callback == NULL) {
-        printf("No drawCallback initialized in the window structure");
+        printf("No drawCallback initialized in the window structure\n");
         return NULL;
     }
     while (callback->id != id && callback->next != NULL) {
         callback = callback->next;
     }
     if (callback == NULL)
-        printf("No drawCallback with this specific id");
+        printf("No drawCallback with this specific id\n");
     return callback;
 }
 
@@ -243,8 +243,16 @@ int mainLoop() {
 
 // Drawing related
 int addRectangle(int x, int y, int width, int height, Color rgb) {
-    printf("Not implemented");
+    printf("Not implemented\n");
     return 0;
+}
+
+void deleteRectangle(int id) {
+    printf("Not implemented\n");
+}
+
+void editRectangle(int id, int x, int y, int width, int height, Color rgb) {
+    printf("Not implemented\n");
 }
 #endif
 
