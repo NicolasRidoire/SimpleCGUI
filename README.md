@@ -1,3 +1,8 @@
-# Emu NES
+# SimpleCGUI
 
-Emu NES a NES émulator written in C. For the GUI, i am using my own cross platforme library (windows with the windows API and linux with the X11 library)
+A simple C GUI library made by a student in is free time because why not.
+
+## Cross-platform
+
+- Windows : use of the windows API
+- Linux : use of the X11/XLib API
