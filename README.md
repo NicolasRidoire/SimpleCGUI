@@ -10,7 +10,7 @@ The objective is for me to use this library for other personal projects.
 
 ## How to install
 
-For now I guess you can just copy/paste the SimpleCGUI folder into your project
+For now I guess you can just copy/paste the SimpleCGUI folder into your project and import SimpleCGUI.c
 
 ## Creating a window
 
