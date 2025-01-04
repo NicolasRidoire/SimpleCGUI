@@ -1,6 +1,6 @@
 # SimpleCGUI
 
-A simple C GUI library made by a student in his free time because why not.
+A simple C GUI library to learn a bit more about the system dependant APIs.
 
 ## Cross-platform
 
