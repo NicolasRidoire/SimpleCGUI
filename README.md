@@ -1,6 +1,6 @@
 # SimpleCGUI
 
-A simple C GUI library to learn a bit more about the system dependant APIs.
+A simple C GUI wrapper library to learn a bit more about the system dependant APIs.
 The objective is for me to use this library for other personal projects.
 
 ## Cross-platform
