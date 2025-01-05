@@ -2,11 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef __linux__
-#include <X11/X.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-
 typedef struct {
     int x;
     int y;
@@ -19,20 +14,24 @@ typedef union {
     RectParams rectParams;
 } DrawParams;
 
-typedef struct DrawCallback {
-    int id;
+typedef struct DrawnObject {
     void (*draw)(DrawParams);
     DrawParams params;
-    struct DrawCallback* previous;
-    struct DrawCallback* next;
-} DrawCallback;
+    struct DrawnObject* previous;
+    struct DrawnObject* next;
+} DrawnObject;
+
+#ifdef __linux__
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
 
 typedef struct {
     Display *display;
     Window rootWin;
     Window win;
     GC gc;
-    DrawCallback* firstDraw;
+    DrawnObject* firstDrawnObject;
 } window;
 
 #elif _WIN32
@@ -42,6 +41,8 @@ typedef struct {
 typedef struct {
     WNDCLASSEX wc;
     HWND hwnd;
+    PAINTSTRUCT ps;
+    DrawnObject* firstDrawnObject;
 } window;
 
 LRESULT CALLBACK eventParsing(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam); 
@@ -68,6 +69,5 @@ Color fromHexToColor(unsigned long int rgb);
 unsigned long int fromColorToHex(Color rgb);
 
 // Drawing related
-int addRectangle(int x, int y, int width, int height, Color rgb);
-void editRectangle(int id, int x, int y, int width, int height, Color rgb);
-void deleteRectangle(int id);
+DrawnObject* addRectangle(int x, int y, int width, int height, Color rgb);
+void deleteRectangle(DrawnObject* rect);
