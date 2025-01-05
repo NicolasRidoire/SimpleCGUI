@@ -34,6 +34,8 @@ typedef struct {
     DrawnObject* firstDrawnObject;
 } window;
 
+void eventParsing(XEvent generalEvent, bool* isWindowOpen); 
+
 #elif _WIN32
 #include <windows.h>
 #include <wingdi.h>
@@ -69,5 +71,9 @@ Color fromHexToColor(unsigned long int rgb);
 unsigned long int fromColorToHex(Color rgb);
 
 // Drawing related
+DrawnObject* getLastDrawnObject();
+DrawnObject* registerDrawCallback(void (*callback)(DrawParams), DrawParams params);
+void unregisterDrawCallback(DrawnObject* object);
+void drawRectangle(DrawParams params);
 DrawnObject* addRectangle(int x, int y, int width, int height, Color rgb);
 void deleteRectangle(DrawnObject* rect);
