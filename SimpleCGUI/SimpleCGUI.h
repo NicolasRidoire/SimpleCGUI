@@ -8,10 +8,6 @@ typedef struct {
     int width;
     int height;
     unsigned long int color;
-} RectParams;
-
-typedef union {
-    RectParams rectParams;
 } DrawParams;
 
 typedef struct DrawnObject {
@@ -21,6 +17,7 @@ typedef struct DrawnObject {
     struct DrawnObject* next;
 } DrawnObject;
 
+//////////////////////////////////////////////////
 #ifdef __linux__
 #include <X11/X.h>
 #include <X11/Xlib.h>
@@ -35,11 +32,13 @@ typedef struct {
 } window;
 
 void eventParsing(XEvent generalEvent, bool* isWindowOpen); 
-
+//////////////////////////////////////////////////
 #elif _WIN32
 #include <windows.h>
 #include <wingdi.h>
 #include <winuser.h>
+#include <windef.h>
+
 typedef struct {
     WNDCLASSEX wc;
     HWND hwnd;
@@ -49,7 +48,7 @@ typedef struct {
 
 LRESULT CALLBACK eventParsing(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam); 
 #endif
-
+//////////////////////////////////////////////////
 typedef struct {
     unsigned char red;
     unsigned char green;
@@ -75,5 +74,7 @@ DrawnObject* getLastDrawnObject();
 DrawnObject* registerDrawCallback(void (*callback)(DrawParams), DrawParams params);
 void unregisterDrawCallback(DrawnObject* object);
 void drawRectangle(DrawParams params);
+void deleteDraw(DrawnObject* object);
 DrawnObject* addRectangle(int x, int y, int width, int height, Color rgb);
+DrawnObject* addCircle(int x, int y, int width, int height, Color rgb);
 void deleteRectangle(DrawnObject* rect);

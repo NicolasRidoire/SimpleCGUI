@@ -37,10 +37,8 @@ int demo() {
         .green = 0,
         .blue = 0
     };
-    DrawnObject* rectId1 = addRectangle(0, 0, 100, 25, rectColor);
-    DrawnObject* rectId2 = addRectangle(200, 200, 100, 25, rectColor);
-    rectId2->params.rectParams.color = fromColorToHex(rectColor2);
-    deleteRectangle(rectId1);
+    DrawnObject* rect = addRectangle(0, 0, 100, 25, rectColor);
+    DrawnObject* circle = addCircle(200, 200, 100, 100, rectColor2);
 
     ERRORS err = mainLoop();
 

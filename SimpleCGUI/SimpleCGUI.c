@@ -2,6 +2,7 @@
 
 static window mainWin;
 
+//////////////////////////////////////////////////
 #ifdef __linux__
 
 // Window related
@@ -62,12 +63,18 @@ int mainLoop() {
 
 // Drawing functions
 void drawRectangle(DrawParams params) {
-    RectParams rectParams = params.rectParams;
-    XSetForeground(mainWin.display, mainWin.gc, rectParams.color);
-    XFillRectangle(mainWin.display, mainWin.win, mainWin.gc, rectParams.x, 
-            rectParams.y, rectParams.width, rectParams.height);
+    XSetForeground(mainWin.display, mainWin.gc, params.color);
+    XFillRectangle(mainWin.display, mainWin.win, mainWin.gc, params.x, 
+            params.y, params.width, params.height);
 }
 
+void drawCircle(DrawParams params) {
+    XSetForeground(mainWin.display, mainWin.gc, params.color);
+    XFillArc(mainWin.display, mainWin.win, mainWin.gc, params.x, 
+            params.y, params.width, params.height, 0, 360*64);
+}
+
+//////////////////////////////////////////////////
 #else
 
 // Window related
@@ -140,20 +147,25 @@ int mainLoop() {
 }
 
 // Drawing functions
+void setBrushColor(int color) {
+    Color rgb = fromHexToColor(color);
+    SelectObject(mainWin.ps.hdc, CreateSolidBrush(RGB(rgb.red, rgb.green, rgb.blue)));
+}
+
 void drawRectangle(DrawParams params) {
-    RectParams rectParams = params.rectParams;
-    RECT rect = {
-        .top = rectParams.y,
-        .left = rectParams.x,
-        .bottom = rectParams.y + rectParams.height,
-        .right = rectParams.x + rectParams.width
-    };
-    Color rgb = fromHexToColor(rectParams.color);
-    if (FillRect(mainWin.ps.hdc, &rect, CreateSolidBrush(RGB(rgb.red, rgb.green, rgb.blue))) == 0)
+    setBrushColor(params.color);
+    if (Rectangle(mainWin.ps.hdc, params.x, params.y, params.x + params.width, params.y + params.height) == 0)
         printf("Failed to draw the rectangle");
 }
 
+void drawCircle(DrawParams params) {
+    setBrushColor(params.color);
+    if (Ellipse(mainWin.ps.hdc, params.x, params.y, params.x + params.width, params.y + params.height) == 0)
+        printf("Failed to draw the ellipse");
+}
+
 #endif
+//////////////////////////////////////////////////
 
 // Callbacks
 DrawnObject* getLastDrawnObject() {
@@ -197,22 +209,31 @@ void unregisterDrawCallback(DrawnObject* object) {
     free(object);
 }
 
+void deleteDraw(DrawnObject* object) {
+    unregisterDrawCallback(object);  
+}
+
 // Drawing API
 DrawnObject* addRectangle(int x, int y, int width, int height, Color rgb) {
     DrawParams params = {
-        .rectParams = {
-            .color = fromColorToHex(rgb),
-            .x = x,
-            .y = y,
-            .width = width,
-            .height = height
-        }
+        .color = fromColorToHex(rgb),
+        .x = x,
+        .y = y,
+        .width = width,
+        .height = height
     };
     return registerDrawCallback(&drawRectangle, params);
 }
 
-void deleteDraw(DrawnObject* object) {
-    unregisterDrawCallback(object);  
+DrawnObject* addCircle(int x, int y, int width, int height, Color rgb) {
+    DrawParams params = {
+        .color = fromColorToHex(rgb),
+        .x = x,
+        .y = y,
+        .width = width,
+        .height = height
+    };
+    return registerDrawCallback(&drawCircle, params);
 }
 
 void deleteRectangle(DrawnObject* rect) {
