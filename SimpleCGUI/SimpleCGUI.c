@@ -1,5 +1,7 @@
 #include "SimpleCGUI.h"
 
+#define DEFAULT_BK_COLOR 0x1e1e2e
+
 static window mainWin;
 
 //////////////////////////////////////////////////
@@ -62,16 +64,31 @@ int mainLoop() {
 }
 
 // Drawing functions
-void drawRectangle(DrawParams params) {
-    XSetForeground(mainWin.display, mainWin.gc, params.color);
-    XFillRectangle(mainWin.display, mainWin.win, mainWin.gc, params.x, 
-            params.y, params.width, params.height);
+void setDefaultFont() {
+    XFontStruct* font = XLoadQueryFont(mainWin.display, "-misc-aurebeshinv-medium-r-normal--0-0-0-0-p-0-iso10646-1");
+    printf("%d\n", font->fid);
+    XSetFont(mainWin.display, mainWin.gc, font->fid);
 }
 
-void drawCircle(DrawParams params) {
-    XSetForeground(mainWin.display, mainWin.gc, params.color);
-    XFillArc(mainWin.display, mainWin.win, mainWin.gc, params.x, 
-            params.y, params.width, params.height, 0, 360*64);
+void drawRectangle(void* params) {
+    DrawParams* p = (DrawParams*)params;
+    XSetForeground(mainWin.display, mainWin.gc, p->color);
+    XFillRectangle(mainWin.display, mainWin.win, mainWin.gc, p->pos.x, 
+            p->pos.y, p->width, p->height);
+}
+
+void drawCircle(void* params) {
+    DrawParams* p = (DrawParams*)params;
+    XSetForeground(mainWin.display, mainWin.gc, p->color);
+    XFillArc(mainWin.display, mainWin.win, mainWin.gc, p->pos.x, 
+            p->pos.y, p->width, p->height, 0, 360*64);
+}
+
+void drawText(void* params) {
+    TextParams* p = (TextParams*)params;
+    setDefaultFont();
+    XSetForeground(mainWin.display, mainWin.gc, p->color);
+    XDrawString(mainWin.display, mainWin.win, mainWin.gc, p->pos.x, p->pos.y, p->text, strlen(p->text));
 }
 
 //////////////////////////////////////////////////
@@ -114,7 +131,7 @@ ERRORS initWindow(const char* windowClassName, void *hInstance) {
         .hInstance = hInstance,
         .hIcon = LoadIcon(NULL, IDI_APPLICATION),
         .hCursor = LoadCursor(NULL, IDC_ARROW),
-        .hbrBackground = CreateSolidBrush(RGB(30, 30, 46)),
+        .hbrBackground = CreateSolidBrush(DEFAULT_BK_COLOR),
         .lpszMenuName = NULL,
         .lpszClassName = windowClassName,
         .hIconSm = LoadIcon(NULL, IDI_APPLICATION)
@@ -152,16 +169,50 @@ void setBrushColor(int color) {
     SelectObject(mainWin.ps.hdc, CreateSolidBrush(RGB(rgb.red, rgb.green, rgb.blue)));
 }
 
-void drawRectangle(DrawParams params) {
-    setBrushColor(params.color);
-    if (Rectangle(mainWin.ps.hdc, params.x, params.y, params.x + params.width, params.y + params.height) == 0)
-        printf("Failed to draw the rectangle");
+void setPenColor(int color) {
+    Color rgb = fromHexToColor(color);
+    SelectObject(mainWin.ps.hdc, CreatePen(PS_SOLID, 0, RGB(rgb.red, rgb.green, rgb.blue)));
 }
 
-void drawCircle(DrawParams params) {
-    setBrushColor(params.color);
-    if (Ellipse(mainWin.ps.hdc, params.x, params.y, params.x + params.width, params.y + params.height) == 0)
-        printf("Failed to draw the ellipse");
+void setTextColor(int color) {
+    Color rgb = fromHexToColor(color);
+    SetTextColor(mainWin.ps.hdc, RGB(rgb.red, rgb.green, rgb.blue));
+}
+
+void setBkColor(int color) {
+    Color rgb = fromHexToColor(color);
+    SetBkColor(mainWin.ps.hdc, RGB(rgb.red, rgb.green, rgb.blue));
+}
+
+void drawRectangle(void* params) {
+    DrawParams* p = (DrawParams*)params;
+    setBrushColor(p->color);
+    if (Rectangle(mainWin.ps.hdc, p->pos.x, p->pos.y, p->pos.x + p->width, p->pos.y + p->height) == 0)
+        printf("Failed to draw the rectangle\n");
+}
+
+void drawCircle(void* params) {
+    DrawParams* p = (DrawParams*)params;
+    setBrushColor(p->color);
+    if (Ellipse(mainWin.ps.hdc, p->pos.x, p->pos.y, p->pos.x + p->width, p->pos.y + p->height) == 0)
+        printf("Failed to draw the ellipse\n");
+}
+
+void setDefaultFont() {
+    HFONT font = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, 
+            OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_QUALITY, 
+            "Arial");
+    SelectObject(mainWin.ps.hdc, font);
+}   
+
+void drawText(void* params) {
+    TextParams* pt = (TextParams*)params;
+    Point p = pt->pos;
+    setDefaultFont();
+    setTextColor(pt->color);
+    setBkColor(DEFAULT_BK_COLOR);
+    if (TextOutA(mainWin.ps.hdc, p.x, p.y, pt->text, strlen(pt->text)) == 0)
+        printf("Failed to draw the text %s\n", pt->text);
 }
 
 #endif
@@ -178,7 +229,7 @@ DrawnObject* getLastDrawnObject() {
     return lastObject;
 }
 
-DrawnObject* registerDrawCallback(void (*callback)(DrawParams), DrawParams params) {
+DrawnObject* registerObject(void callback(void*), void* params) {
     DrawnObject* object = (DrawnObject*)malloc(sizeof(DrawnObject));
     object->draw = callback;
     object->params = params;
@@ -194,7 +245,19 @@ DrawnObject* registerDrawCallback(void (*callback)(DrawParams), DrawParams param
     return object;
 }
 
-void unregisterDrawCallback(DrawnObject* object) {
+DrawnObject* registerDraw(void callback(void*), DrawParams params) {
+    DrawParams* pParams = malloc(sizeof(DrawParams));
+    *pParams = params;
+    return registerObject(callback, pParams);
+}
+
+DrawnObject* registerText(void callback(void*), TextParams params) {
+    TextParams* pParams = malloc(sizeof(TextParams));
+    *pParams = params;
+    return registerObject(callback, pParams);
+}
+
+void unregisterObject(DrawnObject* object) {
     if (object == NULL)
         return;
     DrawnObject* previous = object->previous;
@@ -206,38 +269,67 @@ void unregisterDrawCallback(DrawnObject* object) {
     if (next == NULL)
         previous->next = NULL;
     next->previous = previous;
+    free(object->params);
     free(object);
 }
 
+// Drawing API
 void deleteDraw(DrawnObject* object) {
-    unregisterDrawCallback(object);  
+    unregisterObject(object);  
 }
 
-// Drawing API
 DrawnObject* addRectangle(int x, int y, int width, int height, Color rgb) {
     DrawParams params = {
         .color = fromColorToHex(rgb),
-        .x = x,
-        .y = y,
+        .pos = {
+            .x = x,
+            .y = y,
+        },
         .width = width,
         .height = height
     };
-    return registerDrawCallback(&drawRectangle, params);
+    return registerDraw(&drawRectangle, params);
 }
 
 DrawnObject* addCircle(int x, int y, int width, int height, Color rgb) {
     DrawParams params = {
         .color = fromColorToHex(rgb),
-        .x = x,
-        .y = y,
+        .pos = {
+            .x = x,
+            .y = y,
+        },
         .width = width,
         .height = height
     };
-    return registerDrawCallback(&drawCircle, params);
+    return registerDraw(&drawCircle, params);
 }
 
-void deleteRectangle(DrawnObject* rect) {
-    deleteDraw(rect);
+DrawnObject* addText(int x, int y, const char* text, Color rgb) {
+    TextParams params = {
+        .text = text,
+        .color = fromColorToHex(rgb),
+        .pos = {
+            .x = x,
+            .y = y,
+        }
+    };
+    return registerText(&drawText, params); 
+}
+
+DrawnObject* addDefaultText(int x, int y, const char* text) {
+    if (strlen(text) > MAX_STRING_LENGTH) {
+        printf("string is too long");
+        return NULL;
+    }
+    TextParams params = {
+        .text = text,
+        .color = 0xffffff,
+        .pos = {
+            .x = x,
+            .y = y,
+        }
+    };
+    return registerText(&drawText, params); 
 }
 
 // Utilities

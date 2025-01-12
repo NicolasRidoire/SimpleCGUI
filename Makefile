@@ -7,5 +7,5 @@ else
 endif
 
 commands:
-	gcc main.c $(CCFLAGS) -o $(EXEC) -Wall -ggdb 
+	gcc main.c $(CCFLAGS) -o $(EXEC) -Wall -ggdb -std=c18
 	./$(EXEC)

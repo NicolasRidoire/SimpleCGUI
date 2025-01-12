@@ -1,18 +1,31 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+#define MAX_STRING_LENGTH 4096
 
 typedef struct {
     int x;
     int y;
+} Point;
+
+typedef struct {
+    Point pos;
     int width;
     int height;
     unsigned long int color;
 } DrawParams;
 
+typedef struct {
+    Point pos;
+    unsigned long int color;
+    const char* text;
+} TextParams;
+
 typedef struct DrawnObject {
-    void (*draw)(DrawParams);
-    DrawParams params;
+    void (*draw)(void*);
+    void* params;
     struct DrawnObject* previous;
     struct DrawnObject* next;
 } DrawnObject;
@@ -71,10 +84,15 @@ unsigned long int fromColorToHex(Color rgb);
 
 // Drawing related
 DrawnObject* getLastDrawnObject();
-DrawnObject* registerDrawCallback(void (*callback)(DrawParams), DrawParams params);
-void unregisterDrawCallback(DrawnObject* object);
-void drawRectangle(DrawParams params);
+DrawnObject* registerObject(void callback(void*), void* params);
+DrawnObject* registerDraw(void callback(void*), DrawParams params);
+DrawnObject* registerText(void callback(void*), TextParams params);
+void unregisterObject(DrawnObject* object);
+void drawRectangle(void* params);
+void drawCircle(void* params);
+void drawText(void* params);
 void deleteDraw(DrawnObject* object);
 DrawnObject* addRectangle(int x, int y, int width, int height, Color rgb);
 DrawnObject* addCircle(int x, int y, int width, int height, Color rgb);
-void deleteRectangle(DrawnObject* rect);
+DrawnObject* addText(int x, int y, const char* text, Color rgb);
+DrawnObject* addDefaultText(int x, int y, const char* text);
